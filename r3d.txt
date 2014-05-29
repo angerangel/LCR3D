@@ -1,5 +1,3 @@
-#qui mettiamo le basi
-
 on openCard
    #ok
    #creaiamo matrice identita'
@@ -214,8 +212,10 @@ function r3d_Subtract  m1,m2
    #Subtract matrix m2 from m1
    #keys are one per line
    put the keys of m1 into  trow
+   sort lines of trow ascending numeric by word 1 of each #keys are random sometime
    put the last line of trow into trow
    put the keys of m1[1] into  tcol
+   sort lines of tcol ascending numeric by word 1 of each #keys are random sometime
    put the last line of tcol into tcol
    repeat with i=1 to trow
       repeat with j=1 to tcol
@@ -306,6 +306,7 @@ function r3d_m4xv3_array  vv,m
    #[1]  3x1 (ogni sotto elemento e' identificato da due indici i e j)
    #[2] 3x1
    put the keys of vv into n
+   sort lines of n ascending numeric  by word 1 of each#keys are random sometime
    put the last line of n into n
    repeat with i=1 to n
       put vv[i] into tempv
@@ -320,6 +321,7 @@ function r3d_compose_m4 mlist
    #[1] 4x4
    #[2] 4x4
    put the keys of mlist into n
+   sort lines of n ascending numeric  by word 1 of each#keys are random sometime
    put the last line of n into n
    #let's create the identity matrix
    put the r3d_identity of card "R3D" into temp
@@ -404,6 +406,7 @@ on render  world,camera,canvasSize,no_cull
    #....
    put empty into triangles #this is a text file that contains all data of the scene
    put the keys of world into tot
+   sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
    put the last line of tot into tot
    repeat with n=1 to tot
       put world[n]["model"] into model
@@ -427,6 +430,7 @@ on render  world,camera,canvasSize,no_cull
          set the text of field tutto to triangles
    end repeat
    #now we sort all
+   #is descendig correct? YES, because we need it reverse!
    sort lines of triangles descending numeric by item 1 of each
    #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
    put "set the rect of the templateimage to 0,0," & canvassize & return into r3ddraw
@@ -468,6 +472,7 @@ function r3d_calculateFaceNormals vertices,faces
    #a face may have any number of vertex on its plane
    #we need just 3 point of the plane to get the normal
    put the keys of faces into tot
+   sort lines of tot ascending numeric  by word 1 of each #keys are random sometime
    put the last line of tot into tot
    repeat with n=1 to tot
       put word 1 of faces[n] into v1 #just a number
@@ -519,6 +524,7 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
    put tempy * 0.5 into originy
    put originx & comma & originy into origin
    put the keys of faces into tot
+   sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
    put the last line of tot into tot
    put empty into temptriangle
    repeat with n=1 to tot
@@ -540,8 +546,8 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
          #[2]4 2 5
          repeat for each word tword in faces[n]
             put transformedVertices[tword] into v #a vector 3x1?
-            put (originx + v[1][1]) & comma after  temptriangle
-            put (originy + v[2][1]) & ":"  after  temptriangle
+            put round((originx + v[1][1])) & comma after  temptriangle
+            put round((originy + v[2][1])) & ":"  after  temptriangle
          end repeat
          #remove l'ultima ":"
          delete  the last char of  temptriangle
@@ -567,9 +573,11 @@ end r3d_Render2dTriangles_Simple
 on visualizzamatrix  mat
    #righe
    put the keys of mat into temp
+   sort lines of trow ascending numeric  by word 1 of each #keys are random sometime
    put the last line of temp into rows
    #colonne
    put the keys of mat[1] into temp
+   sort lines of temp ascending numeric  by word 1 of each #keys are random sometime
    put the last line of temp into cols
    # facciamo un testo semplice
    put empty into tmat
