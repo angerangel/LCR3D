@@ -427,13 +427,15 @@ on render  world,camera,canvasSize,no_cull
       else
          put r3d_Render2dTriangles_simple(trans2d,faces,faceInfo,canvasSize,objcolor,false) after triangles
       end if      
-         set the text of field tutto to triangles
    end repeat
    #now we sort all
    #is descendig correct? YES, because we need it reverse!
    sort lines of triangles descending numeric by item 1 of each
    #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
    put "set the rect of the templateimage to 0,0," & canvassize & return into r3ddraw
+   put "if exists(image r3d) then" & return after r3ddraw
+   put "delete image r3d" & return after r3ddraw
+   put "end if" & return after r3ddraw
    put "create image" & quote & "r3d" & quote & return after r3ddraw   
    put "set the brush to 1" & return after r3ddraw
    repeat for each line tline in triangles
@@ -556,7 +558,14 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
          put 0.1 - facez into facez
          put empty into newcolor
          repeat for each item tempit in objcolor            
-            put round(facez * tempit) & "," after newcolor
+            put round(facez * tempit) into temp
+            if temp > 255 then
+               put 255 into temp
+            end if
+            if temp < 0 then
+               put 0 into temp
+            end if            
+            put temp & "," after newcolor            
          end repeat
          put newcolor after temptriangle
          delete  the last char of  temptriangle
@@ -565,6 +574,40 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
    end repeat
    return temptriangle
 end r3d_Render2dTriangles_Simple
+
+function r3d_load_OFF  afile
+   #load a OFF 3D file and convert in an object for R3D library
+   answer "file:" & afile
+   put url ("file:" & afile) into offtext
+   if word 1 of line 1 of offtext is not "OFF" then
+      answer "ERROR: it isn't a valid OFF file"
+      exit r3d_load_OFF
+   end if
+   #some lines are just comments
+   filter lines of offtext without "#*"
+   put line 2 to -1 of offtext into offtext   
+   put word 1 of offtext into numpoints
+   put word 2 of offtext into numfaces
+   put 0 into minv
+   put 0 into maxv
+   repeat with n=1 to numpoints
+      repeat with i=1 to 3
+         put word i of line (n +1) of offtext into temp
+         put temp into model["points"][n][i][1]         
+         if temp > maxv then
+            put temp into maxv
+         end if
+         if temp < minv then
+            put temp into minv
+         end if
+      end repeat      
+   end repeat
+   put maxv - minv into model["scale"] #this give an hint of model scale
+   repeat with n= 1 to numfaces
+         put word 2 to -1  of line (1 + numpoints + n) of offtext into model["faces"][n]      
+   end repeat
+   return model
+end r3d_load_OFF
 
 #############
 #############
