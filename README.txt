@@ -4,6 +4,6 @@ You can provide for each object its status like: translation and rotation.
 You can change camera position and sigth direction.
 You can change the view vindow size.
 
-TO DO
+# TO DO
 
-Load 3D OFF file format
+Load PLY file format
