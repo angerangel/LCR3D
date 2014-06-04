@@ -432,36 +432,658 @@ on render  world,camera,canvasSize,no_cull
    #is descendig correct? YES, because we need it reverse!
    sort lines of triangles descending numeric by item 1 of each
    #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
-   put "set the rect of the templateimage to 0,0," & canvassize & return into r3ddraw
-   put "if exists(image r3d) then" & return after r3ddraw
-   put "delete image r3d" & return after r3ddraw
-   put "end if" & return after r3ddraw
-   put "create image" & quote & "r3d" & quote & return after r3ddraw   
-   put "set the brush to 1" & return after r3ddraw
-   repeat for each line tline in triangles
-      #ricorda che ogni linea e' composta:
-      # depth;x1,y1:x2,y2:x3,y3:...;color
-      put "choose the polygon tool" & return after r3ddraw
-      set the itemdel to ";"
-      put item 3 of tline into fillcolor
-      put "set the brushcolor to " & fillcolor & return after r3ddraw
-      put "set the pencolor to " & fillcolor & return after r3ddraw
-      put item 2 of tline into temptriang
-      set the itemdel to ":"
-      #mettiamo i primi due e poi iteriamo sui rimanenti
-      put item 1 of temptriang into aa      
-      put aa into fine
-      delete item 1 of temptriang
-      repeat for each item titem in temptriang
-         put titem into bb
-         put "drag from " & aa & " to " & bb & return after r3ddraw
-         put bb into aa
+   
+on openCard
+   #ok
+   #creaiamo matrice identita'
+   # 1 0 0 0
+   # 0 1 0 0
+   # 0 0 1 0
+   # 0 0 0 1
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
       end repeat
-      #bisgna chiudere il poligono
-      put "drag from " & aa & " to " & fine & return after r3ddraw 
-      put "choose the browser tool" & return after r3ddraw
    end repeat
-   #do r3ddraw
+   set the r3d_identity of me to temp   
+end openCard
+
+function r3d_perspective d
+   #ok
+   # Create a perspective matrix with a vanishing point d units from the camera
+   # don't set d to zero!!!
+   # 1 0 0 0
+   # 0 1 0 0 
+   # 0 0 0 0 
+   # 0 0 (1/d) 1 
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put 0 into temp[3][3]
+   put 1 / d into temp[4][3]
+   return temp
+end r3d_perspective
+
+function r3d_translate x,y,z
+   #ok
+   #Create a translation matrix:
+   #1 0 0 X 
+   #0 1 0 Y 
+   #0 0 1 Z 
+   #0 0 0 1
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put x into temp[1][4]
+   put y into temp[2][4]
+   put z into temp[3][4]
+   return temp
+end r3d_translate
+
+function r3d_scale x,y,z
+   #ok
+   #Create a scale matrix
+   #X 0 0 0 
+   #0 Y 0 0 
+   #0 0 Z 0 
+   #0 0 0 1 
+      repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put x into temp[1][1]
+   put y into temp[2][2]
+   put z into temp[3][3]
+   return temp
+end r3d_scale
+
+function r3d_rotatex a
+   #ok
+   #rotate around x axis
+   #trasform degree into radians
+   put pi * a /180 into a
+    repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put cos(a) into temp[2][2]
+   put -1 * sin(a) into temp[2][3]
+   put sin(a) into temp[3][2]
+   put cos(a) into temp[3][3]
+   return temp
+end r3d_rotatex
+
+function r3d_rotatey a
+   #ok
+   #rotate around y axis
+   #trasform degree into radians
+   put pi * a /180 into a
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put cos(a) into temp[1][1]
+   put sin(a) into temp[1][3]
+   put -1 * sin(a) into temp[3][1]
+   put cos(a) into temp[3][3]   
+   return temp
+end r3d_rotatey
+
+function r3d_rotatez a
+   #ok
+   #rotate around z axis
+    #trasform degree into radians
+   put pi * a /180 into a
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put cos(a) into temp[1][1]
+   put -1 * sin(a) into temp[1][2]
+   put  sin(a) into temp[2][1]
+   put cos(a) into temp[2][2]   
+   return temp
+end r3d_rotatez
+
+function r3d_length v
+   #ok
+   #length of a vector 3x1
+   put sqrt( (v[1][1])^2 + (v[2][1])^2 + (v[3][1])^2)  into temp
+   return temp
+end r3d_length
+
+function r3d_normalise v
+   #ok
+   #normalize a 3x1 vector
+   put r3d_length(v) into tempL
+   if tempL = 0 then
+      repeat with i=1 to 3
+         put 0 into temp[i][1]
+      end repeat
+   else
+      repeat with i=1 to 3
+         put v[i][1] / tempL into temp[i][1]
+      end repeat
+   end if 
+   return temp
+end r3d_normalise
+
+function r3d_crossproduct  v1,v2
+   #ok
+   #Returns a cross product vector (3x1) between 2 vectors 3x1
+   put v1[2][1] * v2[3][1] - v1[3][1] * v2[2][1] into temp[1][1]
+   put v1[3][1] * v2[1][1] - v1[1][1] * v2[3][1] into temp[2][1]
+   put v1[1][1] * v2[2][1] - v1[2][1] * v2[1][1] into temp[3][1]
+   return temp
+end r3d_crossproduct
+
+function r3d_face_direction DOF,su
+   #ok
+   #get face direction, 
+   #DOF = direction of fligth (3x1 vector)
+   #"su" must not be parallel o DOF (3x1 vector)
+   put  r3d_normalise(DOF) into zaxis
+   put  r3d_normalise(r3d_crossproduct(su,DOF)) into xaxis
+   put  r3d_normalise(r3d_crossproduct(DOF,xaxis)) into yaxis
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         if i = j then
+            put 1 into temp[i][j]
+         else
+            put 0 into temp[i][j]
+         end if         
+      end repeat
+   end repeat
+   put xaxis[1][1] into temp[1][1]
+   put yaxis[1][1] into temp[1][2]
+   put zaxis[1][1] into temp[1][3]
+   put xaxis[2][1] into temp[2][1]
+   put yaxis[2][1] into temp[2][2]
+   put zaxis[2][1] into temp[2][3]
+   put xaxis[3][1] into temp[3][1]
+   put yaxis[3][1] into temp[3][2]
+   put zaxis[3][1] into temp[3][3]
+   return temp   
+end r3d_face_direction
+
+function r3d_Subtract  m1,m2
+   #ok con 3x1
+   #Subtract matrix m2 from m1
+   #keys are one per line
+   put the keys of m1 into  trow
+   sort lines of trow ascending numeric by word 1 of each #keys are random sometime
+   put the last line of trow into trow
+   put the keys of m1[1] into  tcol
+   sort lines of tcol ascending numeric by word 1 of each #keys are random sometime
+   put the last line of tcol into tcol
+   repeat with i=1 to trow
+      repeat with j=1 to tcol
+         put m1[i][j] - m2[i][j] into temp[i][j]
+      end repeat
+   end repeat
+   return temp
+end r3d_subtract
+
+
+function r3d_position_object   obj_pos,pos_look_at,su
+   #ok
+   #obj_pos is a 3x1 vector
+   #pos_look is a 3x1 vector 
+   #su is a 3x1 vector
+   #we need this matrix:
+   #xaxis/1    yaxis/1     zaxis/1     object_position/1
+   #xaxis/2    yaxis/2     zaxis/2     object_position/2
+   #xaxis/3    yaxis/3     zaxis/3     object_position/3
+   #0             0               0               1 
+   put r3d_subtract(pos_look_at,obj_pos) into DOF   
+   put r3d_normalise(DOF) into zaxis
+   put r3d_normalise(r3d_crossproduct(DOF,su)) into xaxis
+   put r3d_normalise(r3d_crossproduct(DOF,xaxis)) into yaxis
+   put xaxis[1][1] into temp[1][1]
+   put yaxis[1][1] into temp[1][2]
+   put zaxis[1][1] into temp[1][3]
+   put obj_pos[1][1] into temp[1][4]
+   put xaxis[2][1] into temp[2][1]
+   put yaxis[2][1] into temp[2][2]
+   put zaxis[2][1] into temp[2][3]
+   put obj_pos[2][1] into temp[2][4]
+   put xaxis[3][1] into temp[3][1]
+   put yaxis[3][1] into temp[3][2]
+   put zaxis[3][1] into temp[3][3]
+   put obj_pos[3][1] into temp[3][4]
+   repeat with i=1 to 4
+      if i=4 then
+         put 1 into temp[4][i]
+      else
+         put 0 into temp[4][i]
+      end if      
+   end repeat
+   return temp
+end r3d_position_object
+
+function r3d_m4xm4  mat1,mat2
+   #ok
+   #Matrix product between two 4x4 matrices
+     repeat with i=1 to 4 
+        repeat with j=1 to 4
+           put 0 into tt
+         repeat with m=1 to 4
+            put  (mat1[i][m] * mat2[m][j]) + tt  into tt
+         end repeat       
+         put tt into temp[i][j]         
+      end repeat
+   end repeat
+   return temp
+end r3d_m4xm4
+
+function r3d_m4xv3 mat1,v
+   #ok
+   #v is a 3x1 vector
+   #Matrix product between a 4x4 matrix and a 4x1 ([A B C 1]) vector. 
+   #This function will append the last 1 to the vector 3x1
+   put 1 into v[4][1]
+   repeat with i=1 to 4           
+      put 0 into tt
+      repeat with m=1 to 4
+         put  (mat1[i][m] * v[m][1]) + tt  into tt
+      end repeat       
+      put tt into temp[i][1]         
+   end repeat
+   #the original library converted to obtain just the direction, with temp[4][1]=1
+   #is it necessary?
+   repeat with i=1 to 4
+      put temp[i][1] / temp[4][1] into temp[i][1]
+   end repeat
+   return temp
+end r3d_m4xv3
+
+function r3d_m4xv3_array  vv,m
+   #ok
+   #This function return the same block of vertices, multiplied for the transformation matrix
+   #vv s must be a block of vertices coordinates, like [( 1 2 3)  (-2 5.2  4) ]
+   #facciamo che vv sia un array, cosi':
+   #[1]  3x1 (ogni sotto elemento e' identificato da due indici i e j)
+   #[2] 3x1
+   put the keys of vv into n
+   sort lines of n ascending numeric  by word 1 of each#keys are random sometime
+   put the last line of n into n
+   repeat with i=1 to n
+      put vv[i] into tempv
+      put  r3d_m4xv3(m,tempv) into tempv2[i]
+   end repeat
+   return tempv2
+end r3d_m4xv3_array
+
+function r3d_compose_m4 mlist
+   #ok
+   #Take a block containing 4x4 matrices and moltiplicate each other obtaining a single 4x4 matrix
+   #[1] 4x4
+   #[2] 4x4
+   put the keys of mlist into n
+   sort lines of n ascending numeric  by word 1 of each#keys are random sometime
+   put the last line of n into n
+   #let's create the identity matrix
+   put the r3d_identity of card "R3D" into temp
+   repeat with i=1 to n      
+      put r3d_m4xm4(mlist[i],temp) into temp
+   end repeat
+   return temp
+end r3d_compose_m4
+
+function r3d_transpose_m4  m
+   #ok
+   #transpose a 4x4 matrix
+   repeat with i=1 to 4
+      repeat with j=1 to 4
+         put m[i][j] into temp[j][i]
+      end repeat
+   end repeat
+   return temp
+end r3d_transpose_m4
+
+function r3d_inverse_m4 m
+   #inverse of a 4x4 matrix
+   #it's a lot of calculation
+   #
+   #let's calculate the determinant:
+   put            m[1][1]*m[2][2]*m[3][3]*m[4][4] + m[1][1]*m[2][3]*m[3][4]*m[4][2] + m[1][1]*m[2][4]*m[3][2]*m[4][3] into detM
+   put detM + m[1][2]*m[2][1]*m[3][4]*m[4][3] + m[1][2]*m[2][3]*m[3][1]*m[4][4] + m[1][2]*m[2][4]*m[3][3]*m[4][1] into detM
+   put detM + m[1][3]*m[2][1]*m[3][2]*m[4][4] + m[1][3]*m[2][2]*m[3][4]*m[4][1] + m[1][3]*m[2][4]*m[3][1]*m[4][2] into detM
+   put detM + m[1][4]*m[2][1]*m[3][3]*m[4][2] + m[1][4]*m[2][2]*m[3][1]*m[4][3] + m[1][4]*m[2][3]*m[3][2]*m[4][1] into detM
+   put detM - m[1][1]*m[2][2]*m[3][4]*m[4][3] - m[1][1]*m[2][3]*m[3][2]*m[4][4] - m[1][1]*m[2][4]*m[3][3]*m[4][2] into detM
+   put detM - m[1][2]*m[2][1]*m[3][3]*m[4][4] - m[1][2]*m[2][3]*m[3][4]*m[4][1] - m[1][2]*m[2][4]*m[3][1]*m[4][3] into detM
+   put detM - m[1][3]*m[2][1]*m[3][4]*m[4][2] - m[1][3]*m[2][2]*m[3][1]*m[4][4] - m[1][3]*m[2][4]*m[3][2]*m[4][1] into detM
+   put detM - m[1][4]*m[2][1]*m[3][2]*m[4][3] - m[1][4]*m[2][2]*m[3][3]*m[4][1] - m[1][4]*m[2][3]*m[3][1]*m[4][2] into detM
+   if detM = 0 then
+      answer "Il determinte e' zero!!!! ERRORE!!"
+   end if
+   #
+   #Now let's calculate the elements:
+   put 1 / detM into det2
+   put det2 * ( m[2][2]*m[3][3]*m[4][4] +  m[2][3]*m[3][4]*m[4][2] + m[2][4]*m[3][2]*m[4][3] - m[2][2]*m[3][4]*m[4][3] - m[2][3]*m[3][2]*m[4][4] - m[2][4]*m[3][3]*m[4][2] ) into temp[1][1]
+   put det2 * ( m[1][2]*m[3][4]*m[4][3] +  m[1][3]*m[3][2]*m[4][4] + m[1][4]*m[3][3]*m[4][2] - m[1][2]*m[3][3]*m[4][4] - m[1][3]*m[3][4]*m[4][2] - m[1][4]*m[3][2]*m[4][3] ) into temp[1][2]
+   put det2 * ( m[1][2]*m[2][3]*m[4][4] +  m[1][3]*m[2][4]*m[4][2] + m[1][4]*m[2][2]*m[4][3] - m[1][2]*m[2][4]*m[4][3] - m[1][3]*m[2][2]*m[4][4] - m[1][4]*m[2][3]*m[4][2] ) into temp[1][3]
+   put det2 * ( m[1][2]*m[2][4]*m[3][3] +  m[1][3]*m[2][2]*m[3][4] + m[1][4]*m[2][3]*m[3][2] - m[1][2]*m[2][3]*m[3][4] - m[1][3]*m[2][4]*m[3][2] - m[1][4]*m[2][2]*m[3][3] ) into temp[1][4]
+   put det2 * ( m[2][1]*m[3][4]*m[4][3] +  m[2][3]*m[3][1]*m[4][4] + m[2][4]*m[3][3]*m[4][1] - m[2][1]*m[3][3]*m[4][4] - m[2][3]*m[3][4]*m[4][1] - m[2][4]*m[3][1]*m[4][3] ) into temp[2][1]
+   put det2 * ( m[1][1]*m[3][3]*m[4][4] +  m[1][3]*m[3][4]*m[4][1] + m[1][4]*m[3][1]*m[4][3] - m[1][1]*m[3][4]*m[4][3] - m[1][3]*m[3][1]*m[4][4] - m[1][4]*m[3][3]*m[4][1] ) into temp[2][2]
+   put det2 * ( m[1][1]*m[2][4]*m[4][3] +  m[1][3]*m[2][1]*m[4][4] + m[1][4]*m[2][3]*m[4][1] - m[1][1]*m[2][3]*m[4][4] - m[1][3]*m[2][4]*m[4][1] - m[1][4]*m[2][1]*m[4][3] ) into temp[2][3]
+   put det2 * ( m[1][1]*m[2][3]*m[3][4] +  m[1][3]*m[2][4]*m[3][1] + m[1][4]*m[2][1]*m[3][3] - m[1][1]*m[2][4]*m[3][3] - m[1][3]*m[2][1]*m[3][4] - m[1][4]*m[2][3]*m[3][1] ) into temp[2][4]
+   put det2 * ( m[2][1]*m[3][2]*m[4][4] +  m[2][2]*m[3][4]*m[4][1] + m[2][4]*m[3][1]*m[4][2] - m[2][1]*m[3][4]*m[4][2] - m[2][2]*m[3][1]*m[4][4] - m[2][4]*m[3][2]*m[4][1] ) into temp[3][1]
+   put det2 * ( m[1][1]*m[3][4]*m[4][2] +  m[1][2]*m[3][1]*m[4][4] + m[1][4]*m[3][2]*m[4][1] - m[1][1]*m[3][2]*m[4][4] - m[1][2]*m[3][4]*m[4][1] - m[1][4]*m[3][1]*m[4][2] ) into temp[3][2]
+   put det2 * ( m[1][1]*m[2][2]*m[4][4] +  m[1][2]*m[2][4]*m[4][1] + m[1][4]*m[2][1]*m[4][2] - m[1][1]*m[2][4]*m[4][2] - m[1][2]*m[2][1]*m[4][4] - m[1][4]*m[2][2]*m[4][1] ) into temp[3][3]
+   put det2 * ( m[1][1]*m[2][4]*m[3][2] +  m[1][2]*m[2][1]*m[3][4] + m[1][4]*m[2][2]*m[3][1] - m[1][1]*m[2][2]*m[3][4] - m[1][2]*m[2][4]*m[3][1] - m[1][4]*m[2][1]*m[3][2] ) into temp[3][4]
+   put det2 * ( m[2][1]*m[3][3]*m[4][2] +  m[2][2]*m[3][1]*m[4][3] + m[2][3]*m[3][2]*m[4][1] - m[2][1]*m[3][2]*m[4][3] - m[2][2]*m[3][3]*m[4][1] - m[2][3]*m[3][1]*m[4][2] ) into temp[4][1]
+   put det2 * ( m[1][1]*m[3][2]*m[4][3] +  m[1][2]*m[3][3]*m[4][1] + m[1][3]*m[3][1]*m[4][2] - m[1][1]*m[3][3]*m[4][2] - m[1][2]*m[3][1]*m[4][3] - m[1][3]*m[3][2]*m[4][1] ) into temp[4][2]
+   put det2 * ( m[1][1]*m[2][3]*m[4][2] +  m[1][2]*m[2][1]*m[4][3] + m[1][3]*m[2][2]*m[4][1] - m[1][1]*m[2][2]*m[4][3] - m[1][2]*m[2][3]*m[4][1] - m[1][3]*m[2][1]*m[4][2] ) into temp[4][3]
+   put det2 * ( m[1][1]*m[2][2]*m[3][3] +  m[1][2]*m[2][3]*m[3][1] + m[1][3]*m[2][1]*m[3][2] - m[1][1]*m[2][3]*m[3][2] - m[1][2]*m[2][1]*m[3][3] - m[1][3]*m[2][2]*m[3][1] ) into temp[4][4]
+   return temp
+end r3d_inverse_m4
+
+function r3d_dotproduct v1,v2
+   # Returns the dot product (a number) between two 3x1 vector
+   put v1[1][1] * v2[1][1]  + v1[2][1] * v2[2][1] + v1[3][1] * v2[3][1] into temp
+   return temp
+end r3d_dotproduct
+
+on render  world,camera,canvasSize,no_cull
+   #Main functionto render 3D objects.
+   #world is a list of object to render
+   ##It contains list of objects(n), model, trasfromation(4x4),color
+   #camera is a 4x4 matrix
+   #canvasSize is  like "800,600"  
+   #no_cull is true or false
+   #
+   #you can change projection to create distorsions:
+   put r3d_perspective(250) into projection
+   put r3d_inverse_m4(camera) into cameraInverse
+   #"world" contains a list of object to render:
+   # it has
+   #[1]["model"] (contains faces and points of the boject)
+   #[1]["properties"] (contains traslation, rotation and other transormationof the object, very usefu in animation)
+   #[1]["color"] (the color to render the object)
+   #[2]["model"] the second obect and so on..
+   #....
+   put empty into triangles #this is a text file that contains all data of the scene
+   put the keys of world into tot
+   sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
+   put the last line of tot into tot
+   repeat with n=1 to tot
+      put world[n]["model"] into model
+      put world[n]["properties"] into modelworld
+      put world[n]["color"] into objcolor
+      put r3d_m4xm4(cameraInverse, modelWorld) into modelCamera
+      #transform the vertices into 3d space relative to the camera
+      #model["points"] contains
+      #[1]3x1
+      #[2]3x1...
+      put r3d_m4xv3_array( model["points"], modelcamera) into transvert
+      put model["faces"] into faces
+      put r3d_calculateFaceNormals(transVert, faces) into faceInfo
+      #transform the vertices again using the projection matrix
+      put r3d_m4xv3_array(transvert,projection)  into trans2d
+      
+      
+
+      put r3d_Render2dTriangles_simple(trans2d, faces,faceInfo, canvasSize, objcolor, no_cull) after triangles
+      
+      
+      
+   end repeat
+   #now we sort all
+   #is descendig correct? YES, because we need it reverse!
+   sort lines of triangles descending numeric by item 1 of each
+   #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
+   
+   
+   ## fred : using graphics is so much faster!
+   lock screen
+   if there is a group "r3d" then
+      delete group "r3d"
+   end if
+   
+   create group "r3d"
+   
+   set the rectangle of group "r3d" to the rectangle of this card  -- whatever...
+   
+   replace ":" with ";" in triangles -- better fix this in the funct
+   
+   
+   set the itemDel to ";"
+   
+   repeat for each line tFace in triangles
+      
+      put the number of items  in tFace into tLength
+      put empty into tPoints
+      
+      repeat with x = 2 to tLength - 1
+         
+         put item x of tFace & cr after tPoints
+         
+      end repeat
+      
+      put item tLength of tFace into tColor
+      
+      
+      set the style of the templateGraphic to polygon
+      set the opaque of the templateGraphic to True
+      set the backColor of the templateGraphic to tColor
+      set the borderColor of the templateGraphic to black -- could have a "show wires" option
+      set the points of the templateGraphic to tPoints
+      
+      create graphic "face" in group "r3d"
+   end repeat
+   
+   
+   unlock screen
+   
+   
+   
+end render
+
+function r3d_calculateFaceNormals vertices,faces
+   #ok
+   #vertices contiene una lista di vettori 3x1
+   #face contiene una lista di punti della lista precedente "2 4 3"
+   #here we calculate the normal vector of the face
+   #it return an array like temp[1]["vcp"]["depth"]
+   #a face may have any number of vertex on its plane
+   #we need just 3 point of the plane to get the normal
+   put the keys of faces into tot
+   sort lines of tot ascending numeric  by word 1 of each #keys are random sometime
+   put the last line of tot into tot
+   repeat with n=1 to tot
+      put word 1 of faces[n] into v1 #just a number
+      put word 2 of faces[n] into v2
+      put word 3 of faces[n] into v3      
+      put vertices[v1] into v1 #a 3x1 vector
+      put vertices[v2] into v2
+      put vertices[v3] into v3
+      put r3d_subtract(v2,v1) into vtmp1
+      put r3d_subtract(v3,v2) into vtmp2
+      put r3d_crossproduct(vtmp1,vtmp2) into vcp
+      put r3d_normalise(vcp) into vcp
+      put vcp into temp[n]["vcp"]
+      #get the furthest Z coordinate
+      put -10000 into largest
+      if v1[3][1] > largest then
+         put v1[3][1] into largest
+      end if
+      if v2[3][1] > largest then
+         put v2[3][1] into largest
+      end if
+      if v3[3][1] > largest then
+         put v3[3][1] into largest
+      end if
+      put largest into temp[n]["depth"]
+   end repeat
+   return temp
+end r3d_calculateFaceNormals
+
+function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvasSize,objcolor,no_cull
+   #we can't draw directly the solids, becose we must determinate the order of drawing
+   #so this function create the base for drawing a single object
+   #the render function sort all faces of all object in order to draw correctly all the scene
+   #what is behind will be covered of what is in front
+   #
+   #canvasSize is the window where solids appear, it's like 800,600
+   #objcolor is a color like 255,255,255
+   #co_cull is true or false
+   #trans2d lista di vertici 3x1
+   #faces lista di facce
+   #faceinfo contiene le normali del solido, esce da r3d_calculateFaceNormals
+   #cerchiamo di fare l'output un testo cosi':
+   # depth;x1,y1:x2,y2:x3,y3:...;color
+   #
+   #we get the origin
+   put the first item of canvasSize into tempx
+   put the second item of canvasSize into tempy
+   put tempx * 0.5 into originx
+   put tempy * 0.5 into originy
+   put originx & comma & originy into origin
+   put the keys of faces into tot
+   sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
+   put the last line of tot into tot
+   put empty into temptriangle
+   repeat with n=1 to tot
+      put faceinfo[n]["vcp"] into facenormal
+      put faceinfo[n]["depth"] into depthval
+      put facenormal[3][1] into faceZ
+      if no_cull then
+         #no back face culling, this oblige all face to be rendered
+         put -1 * abs(faceZ) into faceZ
+      end if
+      #backface culling check:
+      if faceZ <= 0 then
+         #e' meglio che temptriangle sia un file di testo
+         #cosi' si riesce a ordinare con sort lines of tData descending numeric by item 1 of each
+         put depthval & ";" after temptriangle
+         #adesso dobbiamo ripetere un ciclo per ogni elemento dentro l'elenco dei vertici della faccia
+         #l'elenco facce deve essere qualcosa tipo
+         #[1]1 2 3
+         #[2]4 2 5
+         repeat for each word tword in faces[n]
+            put transformedVertices[tword] into v #a vector 3x1?
+            put round((originx + v[1][1])) & comma after  temptriangle
+            put round((originy + v[2][1])) & ":"  after  temptriangle
+         end repeat
+         #remove l'ultima ":"
+         delete  the last char of  temptriangle
+         put ";" after temptriangle
+         #ligthining of the face:
+         put 0.1 - facez into facez
+         put empty into newcolor
+         repeat for each item tempit in objcolor            
+            put round(facez * tempit) into temp
+            if temp > 255 then
+               put 255 into temp
+            end if
+            if temp < 0 then
+               put 0 into temp
+            end if            
+            put temp & "," after newcolor            
+         end repeat
+         put newcolor after temptriangle
+         delete  the last char of  temptriangle
+         put return after temptriangle        
+      end if      
+   end repeat
+   return temptriangle
+end r3d_Render2dTriangles_Simple
+
+function r3d_load_OFF  afile
+   #load a OFF 3D file and convert in an object for R3D library
+   answer "file:" & afile
+   put url ("file:" & afile) into offtext
+   if word 1 of line 1 of offtext is not "OFF" then
+      answer "ERROR: it isn't a valid OFF file"
+      exit r3d_load_OFF
+   end if
+   #some lines are just comments
+   filter lines of offtext without "#*"
+   put line 2 to -1 of offtext into offtext   
+   put word 1 of offtext into numpoints
+   put word 2 of offtext into numfaces
+   put 0 into minv
+   put 0 into maxv
+   repeat with n=1 to numpoints
+      repeat with i=1 to 3
+         put word i of line (n +1) of offtext into temp
+         put temp into model["points"][n][i][1]         
+         if temp > maxv then
+            put temp into maxv
+         end if
+         if temp < minv then
+            put temp into minv
+         end if
+      end repeat      
+   end repeat
+   put maxv - minv into model["scale"] #this give an hint of model scale
+   repeat with n= 1 to numfaces
+         put word 2 to -1  of line (1 + numpoints + n) of offtext into model["faces"][n]      
+   end repeat
+   return model
+end r3d_load_OFF
+
+#############
+#############
+#DEBUG FUNCTIONS
+
+on visualizzamatrix  mat
+   #righe
+   put the keys of mat into temp
+   sort lines of trow ascending numeric  by word 1 of each #keys are random sometime
+   put the last line of temp into rows
+   #colonne
+   put the keys of mat[1] into temp
+   sort lines of temp ascending numeric  by word 1 of each #keys are random sometime
+   put the last line of temp into cols
+   # facciamo un testo semplice
+   put empty into tmat
+   repeat with i = 1 to rows
+      repeat with j = 1 to cols
+         put mat[i][j] & "   "  after tmat
+      end repeat    
+      put return after tmat
+   end repeat
+   answer tmat
+end visualizzamatrix
+
 
 end render
 
