@@ -21,4 +21,5 @@ Opensource: GPL.
 
 # TO DO
 
-Load PLY file format
+* Load PLY file format
+* Purge and translate comments
