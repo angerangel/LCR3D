@@ -1,10 +1,10 @@
 on openCard
-   #ok
-   #creaiamo matrice identita'
+   #create the identity matrix like this:
    # 1 0 0 0
    # 0 1 0 0
    # 0 0 1 0
    # 0 0 0 1
+   #it's essential for matrix calculations
    repeat with i=1 to 4 
       repeat with j=1 to 4
          if i = j then
@@ -17,10 +17,10 @@ on openCard
    set the r3d_identity of me to temp   
 end openCard
 
-function r3d_perspective d
-   #ok
+function r3d_perspective d   
    # Create a perspective matrix with a vanishing point d units from the camera
    # don't set d to zero!!!
+   # like this:
    # 1 0 0 0
    # 0 1 0 0 
    # 0 0 0 0 
@@ -40,8 +40,7 @@ function r3d_perspective d
 end r3d_perspective
 
 function r3d_translate x,y,z
-   #ok
-   #Create a translation matrix:
+   #Create a translation matrix like this:
    #1 0 0 X 
    #0 1 0 Y 
    #0 0 1 Z 
@@ -62,8 +61,7 @@ function r3d_translate x,y,z
 end r3d_translate
 
 function r3d_scale x,y,z
-   #ok
-   #Create a scale matrix
+   #Create a scale matrix like this:
    #X 0 0 0 
    #0 Y 0 0 
    #0 0 Z 0 
@@ -84,9 +82,14 @@ function r3d_scale x,y,z
 end r3d_scale
 
 function r3d_rotatex a
-   #ok
-   #rotate around x axis
-   #trasform degree into radians
+   #rotation matriz around x axis, like this:
+   # 1 0 0 0
+   # 0 cos(a) -sin(a) 0
+   # 0 sin(a) cos(a) 0
+   # 0 0 0 1
+   #
+   # first of all let's trasform degree into radians, 
+   # because livecode trigonometric function work in rardian
    put pi * a /180 into a
     repeat with i=1 to 4 
       repeat with j=1 to 4
@@ -105,9 +108,14 @@ function r3d_rotatex a
 end r3d_rotatex
 
 function r3d_rotatey a
-   #ok
-   #rotate around y axis
-   #trasform degree into radians
+    #rotation matriz around y axis, like this:
+   # cos(a) 0 sin(a) 0
+   # 0 1 0 0
+   # -sin(a) 0 cos(a) 0
+   # 0 0 0 1
+   #
+   # first of all let's trasform degree into radians, 
+   # because livecode trigonometric function work in rardian
    put pi * a /180 into a
    repeat with i=1 to 4 
       repeat with j=1 to 4
@@ -126,9 +134,14 @@ function r3d_rotatey a
 end r3d_rotatey
 
 function r3d_rotatez a
-   #ok
-   #rotate around z axis
-    #trasform degree into radians
+   #rotation matriz around z axis, like this:
+   # cos(a)  -sin(a) 0 0   
+   # sin(a)  cos(a) 0 0
+   # 0 0 1 0
+   # 0 0 0 1
+   #
+   # first of all let's trasform degree into radians, 
+   # because livecode trigonometric function work in rardian
    put pi * a /180 into a
    repeat with i=1 to 4 
       repeat with j=1 to 4
@@ -147,15 +160,14 @@ function r3d_rotatez a
 end r3d_rotatez
 
 function r3d_length v
-   #ok
    #length of a vector 3x1
    put sqrt( (v[1][1])^2 + (v[2][1])^2 + (v[3][1])^2)  into temp
    return temp
 end r3d_length
 
 function r3d_normalise v
-   #ok
-   #normalize a 3x1 vector
+   #normalize a 3x1 vector 
+   # (normalize = its lenght is 1)
    put r3d_length(v) into tempL
    if tempL = 0 then
       repeat with i=1 to 3
@@ -169,9 +181,8 @@ function r3d_normalise v
    return temp
 end r3d_normalise
 
-function r3d_crossproduct  v1,v2
-   #ok
-   #Returns a cross product vector (3x1) between 2 vectors 3x1
+function r3d_crossproduct  v1,v2   
+   #Returns a vector (3x1) that is the cross product  between 2 vectors (3x1)
    put v1[2][1] * v2[3][1] - v1[3][1] * v2[2][1] into temp[1][1]
    put v1[3][1] * v2[1][1] - v1[1][1] * v2[3][1] into temp[2][1]
    put v1[1][1] * v2[2][1] - v1[2][1] * v2[1][1] into temp[3][1]
@@ -179,7 +190,6 @@ function r3d_crossproduct  v1,v2
 end r3d_crossproduct
 
 function r3d_face_direction DOF,su
-   #ok
    #get face direction, 
    #DOF = direction of fligth (3x1 vector)
    #"su" must not be parallel o DOF (3x1 vector)
@@ -207,9 +217,8 @@ function r3d_face_direction DOF,su
    return temp   
 end r3d_face_direction
 
-function r3d_Subtract  m1,m2
-   #ok con 3x1
-   #Subtract matrix m2 from m1
+function r3d_Subtract  m1,m2   
+   #Subtract matrix m2 from matrix m1
    #keys are one per line
    put the keys of m1 into  trow
    sort lines of trow ascending numeric by word 1 of each #keys are random sometime
@@ -226,8 +235,7 @@ function r3d_Subtract  m1,m2
 end r3d_subtract
 
 
-function r3d_position_object   obj_pos,pos_look_at,su
-   #ok
+function r3d_position_object   obj_pos,pos_look_at,su   
    #obj_pos is a 3x1 vector
    #pos_look is a 3x1 vector 
    #su is a 3x1 vector
@@ -263,7 +271,6 @@ function r3d_position_object   obj_pos,pos_look_at,su
 end r3d_position_object
 
 function r3d_m4xm4  mat1,mat2
-   #ok
    #Matrix product between two 4x4 matrices
      repeat with i=1 to 4 
         repeat with j=1 to 4
@@ -278,10 +285,10 @@ function r3d_m4xm4  mat1,mat2
 end r3d_m4xm4
 
 function r3d_m4xv3 mat1,v
-   #ok
    #v is a 3x1 vector
    #Matrix product between a 4x4 matrix and a 4x1 ([A B C 1]) vector. 
-   #This function will append the last 1 to the vector 3x1
+   #Moreover this function will append the last 1 to the vector 3x1, this way it's a 4x1 vector 
+   #that can be used in matrix calculation with 4x4 matrix
    put 1 into v[4][1]
    repeat with i=1 to 4           
       put 0 into tt
@@ -299,11 +306,15 @@ function r3d_m4xv3 mat1,v
 end r3d_m4xv3
 
 function r3d_m4xv3_array  vv,m
-   #ok
    #This function return the same block of vertices, multiplied for the transformation matrix
    #vv s must be a block of vertices coordinates, like [( 1 2 3)  (-2 5.2  4) ]
+   #
    #facciamo che vv sia un array, cosi':
-   #[1]  3x1 (ogni sotto elemento e' identificato da due indici i e j)
+   #vv is a list of 3x1 points, so vv is an array like vv[n][x][1]
+   #where n is the n_th point and x is x-y-z coordinate of the point.
+   #It's complicated but this way we mantain the matrix notation
+   #You just imagei that every point is a 3x1 matrix like this:
+   #[1]  3x1 (so every point matain the i and j position of a vector)
    #[2] 3x1
    put the keys of vv into n
    sort lines of n ascending numeric  by word 1 of each#keys are random sometime
@@ -315,15 +326,15 @@ function r3d_m4xv3_array  vv,m
    return tempv2
 end r3d_m4xv3_array
 
-function r3d_compose_m4 mlist
-   #ok
-   #Take a block containing 4x4 matrices and moltiplicate each other obtaining a single 4x4 matrix
+function r3d_compose_m4 mlist   
+   #Take a block containing many 4x4 matrices and moltiplicate each other obtaining a single 4x4 matrix
+   # like this:
    #[1] 4x4
    #[2] 4x4
    put the keys of mlist into n
    sort lines of n ascending numeric  by word 1 of each#keys are random sometime
    put the last line of n into n
-   #let's create the identity matrix
+   #let's use the identity matrix
    put the r3d_identity of card "R3D" into temp
    repeat with i=1 to n      
       put r3d_m4xm4(mlist[i],temp) into temp
@@ -331,8 +342,7 @@ function r3d_compose_m4 mlist
    return temp
 end r3d_compose_m4
 
-function r3d_transpose_m4  m
-   #ok
+function r3d_transpose_m4  m   
    #transpose a 4x4 matrix
    repeat with i=1 to 4
       repeat with j=1 to 4
@@ -356,7 +366,7 @@ function r3d_inverse_m4 m
    put detM - m[1][3]*m[2][1]*m[3][4]*m[4][2] - m[1][3]*m[2][2]*m[3][1]*m[4][4] - m[1][3]*m[2][4]*m[3][2]*m[4][1] into detM
    put detM - m[1][4]*m[2][1]*m[3][2]*m[4][3] - m[1][4]*m[2][2]*m[3][3]*m[4][1] - m[1][4]*m[2][3]*m[3][1]*m[4][2] into detM
    if detM = 0 then
-      answer "Il determinte e' zero!!!! ERRORE!!"
+      answer "Determinant is zero!!!! ERROR!!"
    end if
    #
    #Now let's calculate the elements:
@@ -395,7 +405,7 @@ on render  world,camera,canvasSize,no_cull
    #no_cull is true or false
    #
    #you can change projection to create distorsions:
-   put r3d_perspective(250) into projection
+   put r3d_perspective(256) into projection
    put r3d_inverse_m4(camera) into cameraInverse
    #"world" contains a list of object to render:
    # it has
@@ -406,28 +416,25 @@ on render  world,camera,canvasSize,no_cull
    #....
    put empty into triangles #this is a text file that contains all data of the scene
    put the keys of world into tot
-   sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
+   sort lines of tot ascending numeric  by word 1 of each #keys are random sometime
    put the last line of tot into tot
    repeat with n=1 to tot
       put world[n]["model"] into model
       put world[n]["properties"] into modelworld
-      put world[n]["color"] into objcolor
+      put world[n]["color"] into objcolor           
+      #debug      
       put r3d_m4xm4(cameraInverse, modelWorld) into modelCamera
       #transform the vertices into 3d space relative to the camera
       #model["points"] contains
       #[1]3x1
       #[2]3x1...
       put r3d_m4xv3_array( model["points"], modelcamera) into transvert
-      put model["faces"] into faces
-      put r3d_calculateFaceNormals(transVert, faces) into faceInfo
+      put r3d_calculateFaceNormals(transVert, model["faces"]) into faceInfo
       #transform the vertices again using the projection matrix
-      put r3d_m4xv3_array(transvert,projection)  into trans2d
-      if no_cull then
-         put r3d_Render2dTriangles_simple(trans2d,faces,faceInfo,canvasSize,objcolor,true) after triangles
-      else
-         put r3d_Render2dTriangles_simple(trans2d,faces,faceInfo,canvasSize,objcolor,false) after triangles
-      end if      
+      put r3d_m4xv3_array(transvert,projection)  into trans2d      
+      put r3d_Render2dTriangles_simple(trans2d,model["faces"],faceInfo,canvasSize,objcolor,no_cull) after triangles         
    end repeat
+   set the text of field tutto to triangles
    #now we sort all
    #is descendig correct? YES, because we need it reverse!
    sort lines of triangles descending numeric by item 1 of each
@@ -439,7 +446,7 @@ on render  world,camera,canvasSize,no_cull
    put "create image" & quote & "r3d" & quote & return after r3ddraw   
    put "set the brush to 1" & return after r3ddraw
    repeat for each line tline in triangles
-      #ricorda che ogni linea e' composta:
+      #every lines is like:
       # depth;x1,y1:x2,y2:x3,y3:...;color
       put "choose the polygon tool" & return after r3ddraw
       set the itemdel to ";"
@@ -448,7 +455,7 @@ on render  world,camera,canvasSize,no_cull
       put "set the pencolor to " & fillcolor & return after r3ddraw
       put item 2 of tline into temptriang
       set the itemdel to ":"
-      #mettiamo i primi due e poi iteriamo sui rimanenti
+      #let's save the first couple to close the polygon
       put item 1 of temptriang into aa      
       put aa into fine
       delete item 1 of temptriang
@@ -457,18 +464,17 @@ on render  world,camera,canvasSize,no_cull
          put "drag from " & aa & " to " & bb & return after r3ddraw
          put bb into aa
       end repeat
-      #bisgna chiudere il poligono
+      #now we close the polygon
       put "drag from " & aa & " to " & fine & return after r3ddraw 
       put "choose the browser tool" & return after r3ddraw
    end repeat
-   #do r3ddraw
-
+   
+   do r3ddraw
 end render
 
-function r3d_calculateFaceNormals vertices,faces
-   #ok
-   #vertices contiene una lista di vettori 3x1
-   #face contiene una lista di punti della lista precedente "2 4 3"
+function r3d_calculateFaceNormals vertices,faces   
+   #vertices is a list vectori 3x1
+   #face is a list of face where every line is the points that create the face like "2 4 3"
    #here we calculate the normal vector of the face
    #it return an array like temp[1]["vcp"]["depth"]
    #a face may have any number of vertex on its plane
@@ -513,10 +519,10 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
    #canvasSize is the window where solids appear, it's like 800,600
    #objcolor is a color like 255,255,255
    #co_cull is true or false
-   #trans2d lista di vertici 3x1
-   #faces lista di facce
-   #faceinfo contiene le normali del solido, esce da r3d_calculateFaceNormals
-   #cerchiamo di fare l'output un testo cosi':
+   #trans2d is vertex list 3x1
+   #faces is faces list
+   #faceinfo contains the normal of the cases, obtained from r3d_calculateFaceNormals
+   #the output will be something like:
    # depth;x1,y1:x2,y2:x3,y3:...;color
    #
    #we get the origin
@@ -538,12 +544,11 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
          put -1 * abs(faceZ) into faceZ
       end if
       #backface culling check:
-      if faceZ <= 0 then
-         #e' meglio che temptriangle sia un file di testo
-         #cosi' si riesce a ordinare con sort lines of tData descending numeric by item 1 of each
+      if faceZ <= 0 then         
+         #it's better to get just a plain text file, this way we can sort it
          put depthval & ";" after temptriangle
-         #adesso dobbiamo ripetere un ciclo per ogni elemento dentro l'elenco dei vertici della faccia
-         #l'elenco facce deve essere qualcosa tipo
+         #now we repeat this cicle for each element vertex of the face 
+         #face list is an array like:
          #[1]1 2 3
          #[2]4 2 5
          repeat for each word tword in faces[n]
@@ -551,7 +556,7 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
             put round((originx + v[1][1])) & comma after  temptriangle
             put round((originy + v[2][1])) & ":"  after  temptriangle
          end repeat
-         #remove l'ultima ":"
+         #remove last ":"
          delete  the last char of  temptriangle
          put ";" after temptriangle
          #ligthining of the face:
@@ -559,6 +564,7 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
          put empty into newcolor
          repeat for each item tempit in objcolor            
             put round(facez * tempit) into temp
+	    #check that is a valid number
             if temp > 255 then
                put 255 into temp
             end if
@@ -577,7 +583,7 @@ end r3d_Render2dTriangles_Simple
 
 function r3d_load_OFF  afile
    #load a OFF 3D file and convert in an object for R3D library
-   answer "file:" & afile
+   #answer "file:" & afile
    put url ("file:" & afile) into offtext
    if word 1 of line 1 of offtext is not "OFF" then
       answer "ERROR: it isn't a valid OFF file"
@@ -604,7 +610,9 @@ function r3d_load_OFF  afile
    end repeat
    put maxv - minv into model["scale"] #this give an hint of model scale
    repeat with n= 1 to numfaces
-         put word 2 to -1  of line (1 + numpoints + n) of offtext into model["faces"][n]      
+      #some model has other value after the points of the face
+      put word 1   of line (1 + numpoints + n) of offtext into nn      
+         put word 2 to (nn + 1)  of line (1 + numpoints + n) of offtext into model["faces"][n]      
    end repeat
    return model
 end r3d_load_OFF
@@ -614,15 +622,16 @@ end r3d_load_OFF
 #DEBUG FUNCTIONS
 
 on visualizzamatrix  mat
-   #righe
+   #this visualize a bidimensional matrix like A x B
+   #rows
    put the keys of mat into temp
    sort lines of trow ascending numeric  by word 1 of each #keys are random sometime
    put the last line of temp into rows
-   #colonne
+   #columns
    put the keys of mat[1] into temp
    sort lines of temp ascending numeric  by word 1 of each #keys are random sometime
    put the last line of temp into cols
-   # facciamo un testo semplice
+   # let's creat a simple text file
    put empty into tmat
    repeat with i = 1 to rows
       repeat with j = 1 to cols
