@@ -17,7 +17,7 @@ on openCard
    set the r3d_identity of me to temp   
 end openCard
 
-function r3d_perspective d   
+function r3d_perspective d       
    # Create a perspective matrix with a vanishing point d units from the camera
    # don't set d to zero!!!
    # like this:
@@ -39,7 +39,7 @@ function r3d_perspective d
    return temp
 end r3d_perspective
 
-function r3d_translate x,y,z
+function r3d_translate x,y,z      
    #Create a translation matrix like this:
    #1 0 0 X 
    #0 1 0 Y 
@@ -60,7 +60,7 @@ function r3d_translate x,y,z
    return temp
 end r3d_translate
 
-function r3d_scale x,y,z
+function r3d_scale x,y,z      
    #Create a scale matrix like this:
    #X 0 0 0 
    #0 Y 0 0 
@@ -81,7 +81,7 @@ function r3d_scale x,y,z
    return temp
 end r3d_scale
 
-function r3d_rotatex a
+function r3d_rotatex a     
    #rotation matriz around x axis, like this:
    # 1 0 0 0
    # 0 cos(a) -sin(a) 0
@@ -107,7 +107,7 @@ function r3d_rotatex a
    return temp
 end r3d_rotatex
 
-function r3d_rotatey a
+function r3d_rotatey a      
     #rotation matriz around y axis, like this:
    # cos(a) 0 sin(a) 0
    # 0 1 0 0
@@ -133,7 +133,7 @@ function r3d_rotatey a
    return temp
 end r3d_rotatey
 
-function r3d_rotatez a
+function r3d_rotatez a     
    #rotation matriz around z axis, like this:
    # cos(a)  -sin(a) 0 0   
    # sin(a)  cos(a) 0 0
@@ -165,7 +165,7 @@ function r3d_length v
    return temp
 end r3d_length
 
-function r3d_normalise v
+function r3d_normalise v   
    #normalize a 3x1 vector 
    # (normalize = its lenght is 1)
    put r3d_length(v) into tempL
@@ -217,7 +217,7 @@ function r3d_face_direction DOF,su
    return temp   
 end r3d_face_direction
 
-function r3d_Subtract  m1,m2   
+function r3d_Subtract  m1,m2         
    #Subtract matrix m2 from matrix m1
    #keys are one per line
    put the keys of m1 into  trow
@@ -235,7 +235,7 @@ function r3d_Subtract  m1,m2
 end r3d_subtract
 
 
-function r3d_position_object   obj_pos,pos_look_at,su   
+function r3d_position_object   obj_pos,pos_look_at,su         
    #obj_pos is a 3x1 vector
    #pos_look is a 3x1 vector 
    #su is a 3x1 vector
@@ -270,7 +270,7 @@ function r3d_position_object   obj_pos,pos_look_at,su
    return temp
 end r3d_position_object
 
-function r3d_m4xm4  mat1,mat2
+function r3d_m4xm4  mat1,mat2     
    #Matrix product between two 4x4 matrices
      repeat with i=1 to 4 
         repeat with j=1 to 4
@@ -284,7 +284,7 @@ function r3d_m4xm4  mat1,mat2
    return temp
 end r3d_m4xm4
 
-function r3d_m4xv3 mat1,v
+function r3d_m4xv3 mat1,v      
    #v is a 3x1 vector
    #Matrix product between a 4x4 matrix and a 4x1 ([A B C 1]) vector. 
    #Moreover this function will append the last 1 to the vector 3x1, this way it's a 4x1 vector 
@@ -305,11 +305,9 @@ function r3d_m4xv3 mat1,v
    return temp
 end r3d_m4xv3
 
-function r3d_m4xv3_array  vv,m
-   #This function return the same block of vertices, multiplied for the transformation matrix
+function r3d_m4xv3_array  vv,m    
+   #This function return the same block of vertices, multiplied for the transformation matrix (4x4)
    #vv s must be a block of vertices coordinates, like [( 1 2 3)  (-2 5.2  4) ]
-   #
-   #facciamo che vv sia un array, cosi':
    #vv is a list of 3x1 points, so vv is an array like vv[n][x][1]
    #where n is the n_th point and x is x-y-z coordinate of the point.
    #It's complicated but this way we mantain the matrix notation
@@ -342,7 +340,7 @@ function r3d_compose_m4 mlist
    return temp
 end r3d_compose_m4
 
-function r3d_transpose_m4  m   
+function r3d_transpose_m4  m        
    #transpose a 4x4 matrix
    repeat with i=1 to 4
       repeat with j=1 to 4
@@ -396,7 +394,7 @@ function r3d_dotproduct v1,v2
    return temp
 end r3d_dotproduct
 
-on render  world,camera,canvasSize,no_cull
+on render  world,camera,canvasSize,no_cull       
    #Main functionto render 3D objects.
    #world is a list of object to render
    ##It contains list of objects(n), model, trasfromation(4x4),color
@@ -472,7 +470,7 @@ on render  world,camera,canvasSize,no_cull
    do r3ddraw
 end render
 
-function r3d_calculateFaceNormals vertices,faces   
+function r3d_calculateFaceNormals vertices,faces        
    #vertices is a list vectori 3x1
    #face is a list of face where every line is the points that create the face like "2 4 3"
    #here we calculate the normal vector of the face
@@ -510,7 +508,7 @@ function r3d_calculateFaceNormals vertices,faces
    return temp
 end r3d_calculateFaceNormals
 
-function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvasSize,objcolor,no_cull
+function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvasSize,objcolor,no_cull      
    #we can't draw directly the solids, becose we must determinate the order of drawing
    #so this function create the base for drawing a single object
    #the render function sort all faces of all object in order to draw correctly all the scene
@@ -610,12 +608,89 @@ function r3d_load_OFF  afile
    end repeat
    put maxv - minv into model["scale"] #this give an hint of model scale
    repeat with n= 1 to numfaces
-      #some model has other value after the points of the face
-      put word 1   of line (1 + numpoints + n) of offtext into nn      
-         put word 2 to (nn + 1)  of line (1 + numpoints + n) of offtext into model["faces"][n]      
+      #some model has other value after the points of the face, so we need to know how many points to read
+      put word 1   of line (1 + numpoints + n) of offtext into nn
+      #unfortunately we need to add 1 to any number, since OFF model numner vetexes starting to 0
+      repeat with nnn=2 to (nn + 1)
+         put ((word nnn of line (1 + numpoints + n) of offtext) + 1 ) & space after model["faces"][n]
+      end repeat
+      #put word 2 to (nn + 1)  of line (1 + numpoints + n) of offtext into model["faces"][n]            
    end repeat
    return model
 end r3d_load_OFF
+
+
+on render2  world,camera,canvasSize,no_cull
+   #Main functionto render 3D objects using vector graphic!
+   #world is a list of object to render
+   ##It contains list of objects(n), model, trasfromation(4x4),color
+   #camera is a 4x4 matrix
+   #canvasSize is  like "800,600"  
+   #no_cull is true or false
+   #
+   #you can change projection to create distorsions:
+   put r3d_perspective(250) into projection
+   put r3d_inverse_m4(camera) into cameraInverse
+   #"world" contains a list of object to render:
+   # it has
+   #[1]["model"] (contains faces and points of the boject)
+   #[1]["properties"] (contains traslation, rotation and other transormationof the object, very usefu in animation)
+   #[1]["color"] (the color to render the object)
+   #[2]["model"] the second obect and so on..
+   #....
+   put empty into triangles #this is a text file that contains all data of the scene
+   put the keys of world into tot
+   sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
+   put the last line of tot into tot
+   repeat with n=1 to tot
+      put world[n]["model"] into model
+      put world[n]["properties"] into modelworld
+      put world[n]["color"] into objcolor
+      put r3d_m4xm4(cameraInverse, modelWorld) into modelCamera
+      #transform the vertices into 3d space relative to the camera
+      #model["points"] contains
+      #[1]3x1
+      #[2]3x1...
+      put r3d_m4xv3_array( model["points"], modelcamera) into transvert
+      put model["faces"] into faces
+      put r3d_calculateFaceNormals(transVert, faces) into faceInfo
+      #transform the vertices again using the projection matrix
+      put r3d_m4xv3_array(transvert,projection)  into trans2d           
+      put r3d_Render2dTriangles_simple(trans2d, faces,faceInfo, canvasSize, objcolor, no_cull) after triangles      
+   end repeat
+   #now we sort all
+   #is descendig correct? YES, because we need it reverse!
+   sort lines of triangles descending numeric by item 1 of each
+   #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
+   ## fred : using graphics is so much faster!
+   #lock screen
+   if there is a group "r3d" then
+      delete group "r3d"
+   end if   
+   create group "r3d"   
+   #set the rectangle of group "r3d" to the rectangle of this card  -- whatever...   
+   replace ":" with ";" in triangles -- better fix this in the funct   
+   set the itemDel to ";"   
+   set the borderwidth of the templateGraphic to 0
+   set the linesize of the templateGraphic to 1   
+   repeat for each line tFace in triangles      
+      put the number of items  in tFace into tLength
+      put empty into tPoints      
+      repeat with x = 2 to tLength - 1         
+         put item x of tFace & cr after tPoints         
+      end repeat      
+      put item tLength of tFace into tColor     
+      set the style of the templateGraphic to polygon
+      set the opaque of the templateGraphic to True
+      set the backgroundcolor of the templateGraphic to tColor
+      set the pencolor of the templateGraphic to tColor  -- could have a "show wires" option
+      set the points of the templateGraphic to tPoints      
+      create graphic "face" in group "r3d"
+   end repeat  
+   #unlock screen   
+end render2
+
+
 
 #############
 #############

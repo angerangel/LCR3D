@@ -22,4 +22,4 @@ Opensource: GPL.
 # TO DO
 
 * Load PLY file format
-* Purge and translate comments
+* Create an interesting and useful Livecode example
