@@ -189,33 +189,6 @@ function r3d_crossproduct  v1,v2
    return temp
 end r3d_crossproduct
 
-function r3d_face_direction DOF,su
-   #get face direction, 
-   #DOF = direction of fligth (3x1 vector)
-   #"su" must not be parallel o DOF (3x1 vector)
-   put  r3d_normalise(DOF) into zaxis
-   put  r3d_normalise(r3d_crossproduct(su,DOF)) into xaxis
-   put  r3d_normalise(r3d_crossproduct(DOF,xaxis)) into yaxis
-   repeat with i=1 to 4 
-      repeat with j=1 to 4
-         if i = j then
-            put 1 into temp[i][j]
-         else
-            put 0 into temp[i][j]
-         end if         
-      end repeat
-   end repeat
-   put xaxis[1][1] into temp[1][1]
-   put yaxis[1][1] into temp[1][2]
-   put zaxis[1][1] into temp[1][3]
-   put xaxis[2][1] into temp[2][1]
-   put yaxis[2][1] into temp[2][2]
-   put zaxis[2][1] into temp[2][3]
-   put xaxis[3][1] into temp[3][1]
-   put yaxis[3][1] into temp[3][2]
-   put zaxis[3][1] into temp[3][3]
-   return temp   
-end r3d_face_direction
 
 function r3d_Subtract  m1,m2         
    #Subtract matrix m2 from matrix m1
@@ -235,14 +208,16 @@ function r3d_Subtract  m1,m2
 end r3d_subtract
 
 
-function r3d_position_object   obj_pos,pos_look_at,su         
-   #obj_pos is a 3x1 vector
-   #pos_look is a 3x1 vector 
-   #su is a 3x1 vector
+function r3d_position_object   obj_pos,pos_look_at,su        
+   #this function is used to creare a camera, you need to specify:
+   #obj_pos is a 3x1 vector (where is the camera, a point of the space)
+   #pos_look is a 3x1 vector  (where the camera is looking)
+   #su is a 3x1 vector (where is the top, you can rotate this vector of 360 degree)
+   #it's like a real camera, you can rotate "su" (top) vector to exchange top with background.
    #we need this matrix:
-   #xaxis/1    yaxis/1     zaxis/1     object_position/1
-   #xaxis/2    yaxis/2     zaxis/2     object_position/2
-   #xaxis/3    yaxis/3     zaxis/3     object_position/3
+   #xaxis_x    yaxis_x     zaxis_x     object_position_x
+   #xaxis_y    yaxis_y     zaxis_y     object_position_y
+   #xaxis_z    yaxis_z     zaxis_z     object_position_z
    #0             0               0               1 
    put r3d_subtract(pos_look_at,obj_pos) into DOF   
    put r3d_normalise(DOF) into zaxis
