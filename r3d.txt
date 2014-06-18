@@ -208,16 +208,14 @@ function r3d_Subtract  m1,m2
 end r3d_subtract
 
 
-function r3d_position_object   obj_pos,pos_look_at,su        
-   #this function is used to creare a camera, you need to specify:
-   #obj_pos is a 3x1 vector (where is the camera, a point of the space)
-   #pos_look is a 3x1 vector  (where the camera is looking)
-   #su is a 3x1 vector (where is the top, you can rotate this vector of 360 degree)
-   #it's like a real camera, you can rotate "su" (top) vector to exchange top with background.
+function r3d_position_object   obj_pos,pos_look_at,su         
+   #obj_pos is a 3x1 vector
+   #pos_look is a 3x1 vector 
+   #su is a 3x1 vector
    #we need this matrix:
-   #xaxis_x    yaxis_x     zaxis_x     object_position_x
-   #xaxis_y    yaxis_y     zaxis_y     object_position_y
-   #xaxis_z    yaxis_z     zaxis_z     object_position_z
+   #xaxis/1    yaxis/1     zaxis/1     object_position/1
+   #xaxis/2    yaxis/2     zaxis/2     object_position/2
+   #xaxis/3    yaxis/3     zaxis/3     object_position/3
    #0             0               0               1 
    put r3d_subtract(pos_look_at,obj_pos) into DOF   
    put r3d_normalise(DOF) into zaxis
@@ -369,6 +367,54 @@ function r3d_dotproduct v1,v2
    return temp
 end r3d_dotproduct
 
+function r3d_load_PLY afile
+   #load a PLY 3D file and convert in an object for R3D library
+   #answer "file:" & afile
+   put url ("file:" & afile) into offtext
+   if toLower(word 1 of line 1 of offtext) is not "ply" then
+      answer "ERROR: it isn't a valid PLY file"
+      exit r3d_load_PLY
+   end if
+   #some lines are just comments
+   filter lines of offtext without "comment*"
+   put line 2 to -1 of offtext into offtext      
+   ##  get number of vertices    
+   put lineOffset("element vertex",  offtext) into tVertexNumLine
+   put word -1 of line tVertexNumLine of offtext into numpoints         
+   ##  get number of faces
+   put lineOffset("element face",  offtext) into tVertexNumLine
+   put word -1 of line tVertexNumLine of offtext into numfaces
+   ##  separate header from model data
+   put lineOffset("end_header", offtext) into tEndHeaderLine   
+   put line tEndHeaderLine + 1 to -1 of offtext into offtext
+   #exract points and scale   
+   put 0 into minv
+   put 0 into maxv
+   repeat with n=1 to numpoints
+      repeat with i=1 to 3
+         put word i of line n  of offtext into temp
+         put temp into model["points"][n][i][1]         
+         if temp > maxv then
+            put temp into maxv
+         end if
+         if temp < minv then
+            put temp into minv
+         end if
+      end repeat      
+   end repeat
+   put maxv - minv into model["scale"] #this give an hint of model scale
+   repeat with n= 1 to numfaces
+      #some model has other value after the points of the face, so we need to know how many points to read
+      put word 1   of line (numpoints + n) of offtext into nn
+      #unfortunately we need to add 1 to any number, since OFF model numner vetexes starting to 0
+      repeat with nnn=2 to (nn + 1)
+         put((word nnn of line (numpoints + n) of offtext) + 1)  & space after model["faces"][n]
+      end repeat
+      #put word 2 to (nn + 1)  of line (1 + numpoints + n) of offtext into model["faces"][n]            
+   end repeat
+   return model   
+end r3d_load_PLY
+
 on render  world,camera,canvasSize,no_cull       
    #Main functionto render 3D objects.
    #world is a list of object to render
@@ -407,9 +453,11 @@ on render  world,camera,canvasSize,no_cull
       put r3d_m4xv3_array(transvert,projection)  into trans2d      
       put r3d_Render2dTriangles_simple(trans2d,model["faces"],faceInfo,canvasSize,objcolor,no_cull) after triangles         
    end repeat
+   #debug
    set the text of field tutto to triangles
    #now we sort all
    #is descendig correct? YES, because we need it reverse!
+   set itemdel to ";"
    sort lines of triangles descending numeric by item 1 of each
    #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
    put "set the rect of the templateimage to 0,0," & canvassize & return into r3ddraw
@@ -417,6 +465,7 @@ on render  world,camera,canvasSize,no_cull
    put "delete image r3d" & return after r3ddraw
    put "end if" & return after r3ddraw
    put "create image" & quote & "r3d" & quote & return after r3ddraw   
+   put "set the layermode of image r3d to " & quote & "dynamic" & quote & return after r3ddraw
    put "set the brush to 1" & return after r3ddraw
    repeat for each line tline in triangles
       #every lines is like:
@@ -441,7 +490,8 @@ on render  world,camera,canvasSize,no_cull
       put "drag from " & aa & " to " & fine & return after r3ddraw 
       put "choose the browser tool" & return after r3ddraw
    end repeat
-   
+      #debug
+   #set the text of field tutto to r3ddraw
    do r3ddraw
 end render
 
@@ -632,9 +682,12 @@ on render2  world,camera,canvasSize,no_cull
       #transform the vertices again using the projection matrix
       put r3d_m4xv3_array(transvert,projection)  into trans2d           
       put r3d_Render2dTriangles_simple(trans2d, faces,faceInfo, canvasSize, objcolor, no_cull) after triangles      
+      #debug
+   set the text of field tutto to triangles
    end repeat
    #now we sort all
    #is descendig correct? YES, because we need it reverse!
+   set the itemdel to ";"
    sort lines of triangles descending numeric by item 1 of each
    #now we draw, the name "triangle" doesn't mean that are just triangle. Faces can be any type of polygon.
    ## fred : using graphics is so much faster!
@@ -643,18 +696,13 @@ on render2  world,camera,canvasSize,no_cull
       delete group "r3d"
    end if   
    create group "r3d"   
-   #set the rectangle of group "r3d" to the rectangle of this card  -- whatever...   
-   replace ":" with ";" in triangles -- better fix this in the funct   
-   set the itemDel to ";"   
+   set the layermode of group "r3d" to "dynamic"
    set the borderwidth of the templateGraphic to 0
    set the linesize of the templateGraphic to 1   
    repeat for each line tFace in triangles      
-      put the number of items  in tFace into tLength
-      put empty into tPoints      
-      repeat with x = 2 to tLength - 1         
-         put item x of tFace & cr after tPoints         
-      end repeat      
-      put item tLength of tFace into tColor     
+      put item 2 tFace into tpoints
+      replace ":" with return in tpoints      
+      put item -1 of tFace into tColor     
       set the style of the templateGraphic to polygon
       set the opaque of the templateGraphic to True
       set the backgroundcolor of the templateGraphic to tColor
