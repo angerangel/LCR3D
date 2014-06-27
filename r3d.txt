@@ -75,7 +75,7 @@ function r3d_rotatex a
 end r3d_rotatex
 
 function r3d_rotatey a      
-    #rotation matriz around y axis, like this:
+   #rotation matriz around y axis, like this:
    # cos(a) 0 sin(a) 0
    # 0 1 0 0
    # -sin(a) 0 cos(a) 0
@@ -84,7 +84,7 @@ function r3d_rotatey a
    # first of all let's trasform degree into radians, 
    # because livecode trigonometric function work in rardian
    put pi * a /180 into a
-  put the r3d_identity of me into temp
+   put the r3d_identity of me into temp
    put cos(a) into temp[1][1]
    put sin(a) into temp[1][3]
    put -1 * sin(a) into temp[3][1]
@@ -192,9 +192,9 @@ end r3d_position_object
 
 function r3d_m4xm4  mat1,mat2     
    #Matrix product between two 4x4 matrices
-     repeat with i=1 to 4 
-        repeat with j=1 to 4
-           put 0 into tt
+   repeat with i=1 to 4 
+      repeat with j=1 to 4
+         put 0 into tt
          repeat with m=1 to 4
             put  (mat1[i][m] * mat2[m][j]) + tt  into tt
          end repeat       
@@ -393,7 +393,8 @@ on render  world,camera,canvasSize,no_cull
       put r3d_Render2dTriangles_simple(trans2d,model["faces"],faceInfo,canvasSize,objcolor,no_cull) after triangles         
    end repeat
    #debug
-   set the text of field tutto to triangles
+   #set the text of field tutto to triangles
+   #####
    #now we sort all
    #is descendig correct? YES, because we need it reverse!
    set itemdel to ";"
@@ -429,8 +430,9 @@ on render  world,camera,canvasSize,no_cull
       put "drag from " & aa & " to " & fine & return after r3ddraw 
       put "choose the browser tool" & return after r3ddraw
    end repeat
-      #debug
+   #debug
    #set the text of field tutto to r3ddraw
+   ##
    do r3ddraw
 end render
 
@@ -622,7 +624,7 @@ on render2  world,camera,canvasSize,no_cull
       put r3d_m4xv3_array(transvert,projection)  into trans2d           
       put r3d_Render2dTriangles_simple(trans2d, faces,faceInfo, canvasSize, objcolor, no_cull) after triangles      
       #debug
-   set the text of field tutto to triangles
+      #set the text of field tutto to triangles
    end repeat
    #now we sort all
    #is descendig correct? YES, because we need it reverse!
