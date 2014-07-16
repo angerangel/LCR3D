@@ -66,6 +66,7 @@ function r3d_rotatex a
    #
    # first of all let's trasform degree into radians, 
    # because livecode trigonometric function work in rardian
+   put pi * a /180 into a
    put the r3d_identity of me into temp   
    put cos(a) into temp[2][2]
    put -1 * sin(a) into temp[2][3]
