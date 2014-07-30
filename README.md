@@ -10,7 +10,8 @@ You can change the view vindow size.
 
 * **r3d.txt** is the library, you can copy it in your stack
 * **3D-models** folders contains some 3D model files to play with.
-* **R3D.livecode** is a working example _(at the present is a working progress)_
+* **R3D.livecode** is a working example 
+* **Robot.livecode** is another example
 * **builds** folder contains working executable demos, use this binary demos. They are quicker and without glitches, since all development controls are dropped.
 
 ## What can I do?
@@ -23,4 +24,7 @@ Opensource: GPL.
 # TO DO
 
 * Load PLY file format
+
+# Screenshot
+![](http://s28.postimg.org/lpv3xq7p9/Screenshot_19_07_2014_22_00.png)
 
