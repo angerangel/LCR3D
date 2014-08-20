@@ -26,7 +26,7 @@ function r3d_perspective d
    # 0 0 0 0 
    # 0 0 (1/d) 1 
    put the r3d_identity of me into temp
-   put 0 into temp[3][3]
+   put 0 into temp[3][3]  
    put 1 / d into temp[4][3]
    return temp
 end r3d_perspective
@@ -66,7 +66,7 @@ function r3d_rotatex a
    #
    # first of all let's trasform degree into radians, 
    # because livecode trigonometric function work in rardian
-   put pi * a /180 into a
+   put pi * a / 180 into a
    put the r3d_identity of me into temp   
    put cos(a) into temp[2][2]
    put -1 * sin(a) into temp[2][3]
@@ -84,7 +84,7 @@ function r3d_rotatey a
    #
    # first of all let's trasform degree into radians, 
    # because livecode trigonometric function work in rardian
-   put pi * a /180 into a
+   put pi * a / 180 into a
    put the r3d_identity of me into temp
    put cos(a) into temp[1][1]
    put sin(a) into temp[1][3]
@@ -102,7 +102,7 @@ function r3d_rotatez a
    #
    # first of all let's trasform degree into radians, 
    # because livecode trigonometric function work in rardian
-   put pi * a /180 into a
+   put pi * a / 180 into a
    put the r3d_identity of me into temp
    put cos(a) into temp[1][1]
    put -1 * sin(a) into temp[1][2]
@@ -310,29 +310,28 @@ end r3d_dotproduct
 function r3d_load_PLY afile
    #load a PLY 3D file and convert in an object for R3D library
    #answer "file:" & afile
-   put url ("file:" & afile) into offtext
-   if toLower(word 1 of line 1 of offtext) is not "ply" then
+   put url ("file:" & afile) into plytext
+   if toLower(word 1 of line 1 of plytext) is not "ply" then
       answer "ERROR: it isn't a valid PLY file"
       exit r3d_load_PLY
    end if
-   #some lines are just comments
-   filter lines of offtext without "comment*"
-   put line 2 to -1 of offtext into offtext      
-   ##  get number of vertices    
-   put lineOffset("element vertex",  offtext) into tVertexNumLine
-   put word -1 of line tVertexNumLine of offtext into numpoints         
-   ##  get number of faces
-   put lineOffset("element face",  offtext) into tVertexNumLine
-   put word -1 of line tVertexNumLine of offtext into numfaces
-   ##  separate header from model data
-   put lineOffset("end_header", offtext) into tEndHeaderLine   
-   put line tEndHeaderLine + 1 to -1 of offtext into offtext
+   #########
+   #serch number of vertices
+   put lineoffset("element vertex",plytext) into tLine
+   put word -1 of line tLine of plytext into numpoints
+   # search number of lines
+   put lineoffset("element face",plytext) into tLine
+   put word -1 of line tLine of plytext into numfaces
+   #remove header
+   put lineoffset("end_header",plytext) + 1 into tLine
+   put line tLine to -1 of plytext into plytext
+   #########
    #exract points and scale   
    put 0 into minv
    put 0 into maxv
    repeat with n=1 to numpoints
       repeat with i=1 to 3
-         put word i of line n  of offtext into temp
+         put word i of line n  of plytext into temp
          put temp into model["points"][n][i][1]         
          if temp > maxv then
             put temp into maxv
@@ -343,17 +342,55 @@ function r3d_load_PLY afile
       end repeat      
    end repeat
    put maxv - minv into model["scale"] #this give an hint of model scale
+   #extract faces
    repeat with n= 1 to numfaces
       #some model has other value after the points of the face, so we need to know how many points to read
-      put word 1   of line (numpoints + n) of offtext into nn
-      #unfortunately we need to add 1 to any number, since OFF model numner vetexes starting to 0
+      put word 1   of line (numpoints + n) of plytext into nn
+      #unfortunately we need to add 1 to any number, since PLY model numner vetexes starting to 0
       repeat with nnn=2 to (nn + 1)
-         put((word nnn of line (numpoints + n) of offtext) + 1)  & space after model["faces"][n]
-      end repeat
-      #put word 2 to (nn + 1)  of line (1 + numpoints + n) of offtext into model["faces"][n]            
+         put((word nnn of line (numpoints + n) of plytext) + 1)  & space after model["faces"][n]
+      end repeat      
    end repeat
    return model   
 end r3d_load_PLY
+
+function r3d_load_OBJ afile
+   #load a OBJ 3D file and convert in an object for R3D library   
+   put url ("file:" & afile) into objtext  
+   #########
+   #serch vertices and scale
+   filter lines of objtext with "v *" into tVert
+   put 0 into minv
+   put 0 into maxv
+   put 0 into n
+   repeat for each line tLine in tVert
+      put n + 1 into n
+      repeat with i=1 to 3 
+         put word (i + 1) of tLine into temp # we skip the first word "v"
+         put temp into model["points"][n][i][1]         
+         if temp > maxv then
+            put temp into maxv
+         end if
+         if temp < minv then
+            put temp into minv
+         end if
+      end repeat      
+   end repeat   
+   put maxv - minv into model["scale"] #this give an hint of model scale
+   # search faces
+   filter lines of objtext with "f *" into tFaces
+   set itemdel to "/"
+   put 0 into n
+   repeat for each line tLine in tFaces
+      put n + 1 into n
+      put the number of words in tLine into temp      
+      repeat with i=2 to temp
+         put word i of tLine into temp2
+         put (item 1 of temp2 ) & space after model["faces"][n]         
+      end repeat       
+   end repeat
+   return model   
+end r3d_load_obj
 
 on render  world,camera,canvasSize,no_cull       
    #Main functionto render 3D objects.
@@ -498,7 +535,7 @@ function r3d_Render2dTriangles_Simple  transformedVertices,faces,faceInfo,canvas
    put originx & comma & originy into origin
    put the keys of faces into tot
    sort lines of tot ascending numeric  by word 1 of each#keys are random sometime
-   put the last line of tot into tot
+   put the last line of tot into tot #this is the total number of faces... I hope
    put empty into temptriangle
    repeat with n=1 to tot
       put faceinfo[n]["vcp"] into facenormal
@@ -587,7 +624,7 @@ function r3d_load_OFF  afile
 end r3d_load_OFF
 
 
-on render2  world,camera,canvasSize,no_cull
+on render2  world,camera,projection,canvasSize,no_cull
    #Main functionto render 3D objects using vector graphic!
    #world is a list of object to render
    ##It contains list of objects(n), model, trasfromation(4x4),color
@@ -596,7 +633,7 @@ on render2  world,camera,canvasSize,no_cull
    #no_cull is true or false
    #
    #you can change projection to create distorsions:
-   put r3d_perspective(250) into projection
+   put r3d_perspective(projection) into projection
    put r3d_inverse_m4(camera) into cameraInverse
    #"world" contains a list of object to render:
    # it has
@@ -652,6 +689,8 @@ on render2  world,camera,canvasSize,no_cull
       set the points of the templateGraphic to tPoints      
       create graphic "face" in group "r3d"
    end repeat  
+   #since the group auto adapt to content size, now we need clipping
+   #set the rect of group "r3d" to ("0,0," & canvasSize)
    #unlock screen   
 end render2
 

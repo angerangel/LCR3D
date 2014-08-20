@@ -16,15 +16,17 @@ You can change the view vindow size.
 
 ## What can I do?
 
-Propose changes, bugs, forks, any is welcome!
+Propose changes, [bugs](https://github.com/angerangel/LCR3D/issues), forks, [add stuff to the wiki](https://github.com/angerangel/LCR3D/wiki), any is welcome!
 
 ## License
 Opensource: GPL.
 
-# TO DO
 
-* Load PLY file format
+# Screenshots
 
-# Screenshot
+More than these are in screenshot directory:
+
 ![](http://s28.postimg.org/lpv3xq7p9/Screenshot_19_07_2014_22_00.png)
+![](http://s4.postimg.org/ohr6mhzzh/robot.jpg)
+
 
