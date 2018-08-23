@@ -26,7 +26,7 @@ Opensource: GPL.
 
 More than these are in screenshot directory:
 
-![](http://s28.postimg.org/lpv3xq7p9/Screenshot_19_07_2014_22_00.png)
-![](http://s4.postimg.org/ohr6mhzzh/robot.jpg)
+![](https://raw.githubusercontent.com/angerangel/LCR3D/master/screenshots/AirplaneX.png)
+![](https://raw.githubusercontent.com/angerangel/LCR3D/master/screenshots/teapot.off.png)
 
 
